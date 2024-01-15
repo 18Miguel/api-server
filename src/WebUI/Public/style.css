@@ -1,0 +1,30 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    font-family: 'Courier New', monospace;
+    background-color: #181818;
+}
+
+.text-color {
+    color: #00FFAF;
+}
+
+h1 {
+    font-weight: 300;
+    font-size: 50pt;
+}
+
+a {
+    font-size: 14pt;
+}
