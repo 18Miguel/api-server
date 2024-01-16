@@ -9,6 +9,7 @@ import IMediaCatalogStore from 'src/Infrastructure/Interfaces/Stores/IMediaCatal
 @Injectable()
 export default class MediaCatalogService implements IMediaCatalogService, IMediaCatalogStore  {
     private readonly logger = new Logger(MediaCatalogService.name);
+    private readonly eventName = 'media-updated';
 
     constructor(
         private readonly mediaCatalogStore: MediaCatalogStore,
@@ -18,9 +19,11 @@ export default class MediaCatalogService implements IMediaCatalogService, IMedia
     @Cron(CronExpression.EVERY_MINUTE)
     private updateTVShowsData(): void {
         this.logger.log('TV Show updated');
-        this.socketGateway.streamDataToClients('media-updated', {
-            id: 888, title: 'The Movie',
-        });
+        if (this.socketGateway.getClientsCount() > 0) {
+            this.socketGateway.streamDataToClients(this.eventName, {
+                id: 888, title: 'The Movie',
+            });
+        }
     }
 
     async findAll(): Promise<Array<MediaCatalogDto>> {

@@ -21,7 +21,13 @@ export default class SocketGateway implements OnGatewayConnection, OnGatewayDisc
         this.logger.log(`Client ${client.id} disconnected from the Web Socket`);
     }
 
-    streamDataToClients(event: string, data: any): void {
-        this.server.emit(event, data);
+    getClientsCount(): number {
+        return this.server.engine.clientsCount;
+    }
+
+    streamDataToClients(eventName: string, data: any): void {
+        if (this.getClientsCount() > 0) {
+            this.server.emit(eventName, data);
+        }
     }
 }
