@@ -1,5 +1,8 @@
 import { Column, Entity, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
 import Guild from './Guild';
+import UserDto from '../DTO/UserDto';
+import ValidatorRule from '../Shared/ValidatorRule';
+import { HttpException, HttpStatus } from '@nestjs/common';
 
 @Entity()
 export default class User {
@@ -12,16 +15,17 @@ export default class User {
     @ManyToMany(() => Guild, (guild) => guild.users)
     guilds: Array<Guild>;
 
-    guildIds?: Array<number>;
+    updateUser(userDto: UserDto) {
+        ValidatorRule
+            .when(userDto.birthdayDate &&
+                new Date(userDto.birthdayDate).getTime() > new Date().getTime())
+            .triggerException(new HttpException(
+                'The birthday date must be from today onwards.',
+                HttpStatus.BAD_REQUEST
+            ));
 
-    /* constructor(user?: User) {
-        if (!user) return;
-
-        if (user.birthdayDate && new Date(user.birthdayDate).getTime() > new Date().getTime())
-            throw new BadRequestError("The birthday date must be from today onwards.");
-        
-        this.id = user.id;
-        this.birthdayDate = user.birthdayDate || null;
-        this.guilds = user.guilds || null;
-    } */
+        this.id = userDto.id;
+        this.birthdayDate = userDto.birthdayDate || null;
+        this.guilds = [];
+    }
 }

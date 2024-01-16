@@ -9,7 +9,7 @@ export async function Bootstrap(): Promise<INestApplication> {
         .setTitle('API Server 🐈')
         .setDescription('Custom API Server')
         .setVersion('1.0')
-        .addTag('Media Catalog').addTag('Discord Guilds')
+        .addTag('Media Catalog').addTag('Discord Guilds').addTag('Users')
         .build();
     const document = SwaggerModule.createDocument(app, config);
 

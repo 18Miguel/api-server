@@ -4,8 +4,8 @@ import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import MediaCatalog from 'src/Core/Domains/MediaCatalog';
 import MediaCatalogDto from 'src/Core/DTO/MediaCatalogDto';
-import ObjectMapper from 'src/Core/shared/ObjectMapper';
-import ValidatorRule from 'src/Core/shared/ValidatorRule';
+import ObjectMapper from 'src/Core/Shared/ObjectMapper';
+import ValidatorRule from 'src/Core/Shared/ValidatorRule';
 
 @Injectable()
 export default class MediaCatalogStore implements IMediaCatalogStore {

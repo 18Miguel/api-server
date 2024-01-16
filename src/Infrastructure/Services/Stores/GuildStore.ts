@@ -4,8 +4,8 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import Guild from "src/Core/Domains/Guild";
 import GuildDto from "src/Core/DTO/GuildDto";
-import ObjectMapper from "src/Core/shared/ObjectMapper";
-import ValidatorRule from "src/Core/shared/ValidatorRule";
+import ObjectMapper from "src/Core/Shared/ObjectMapper";
+import ValidatorRule from "src/Core/Shared/ValidatorRule";
 
 @Injectable()
 export default class GuildStore implements IGuildStore {
@@ -47,7 +47,7 @@ export default class GuildStore implements IGuildStore {
 
         const guild = new Guild();
 
-        guild.updateMediaCatalog(guildDto);
+        guild.updateGuild(guildDto);
 
         return await this.guildRepository
             .save(guild)
@@ -76,11 +76,11 @@ export default class GuildStore implements IGuildStore {
                 HttpStatus.BAD_REQUEST
             ));
 
-            guild.updateMediaCatalog(guildDto);
+            guild.updateGuild(guildDto);
 
         return await this.guildRepository
             .save(guild)
-            .then((updatedMedia) => ObjectMapper.mapTo<GuildDto>(updatedMedia))
+            .then((updatedGuild) => ObjectMapper.mapTo<GuildDto>(updatedGuild))
             .catch((onrejected) => {
                 throw new HttpException(`${onrejected}`, HttpStatus.INTERNAL_SERVER_ERROR);
             });

@@ -19,7 +19,7 @@ export default class MediaCatalogService implements IMediaCatalogService, IMedia
     private updateTVShowsData(): void {
         this.logger.log('TV Show updated');
         this.socketGateway.streamDataToClients('media-updated', {
-            id: 12312, title: 'The Movie',
+            id: 888, title: 'The Movie',
         });
     }
 

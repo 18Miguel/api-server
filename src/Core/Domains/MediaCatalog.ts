@@ -1,6 +1,6 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 import MediaCatalogDto from '../DTO/MediaCatalogDto';
-import ValidatorRule from '../shared/ValidatorRule';
+import ValidatorRule from '../Shared/ValidatorRule';
 import { HttpException, HttpStatus } from '@nestjs/common';
 
 @Entity()

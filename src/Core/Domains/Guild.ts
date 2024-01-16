@@ -23,7 +23,7 @@ export default class Guild {
     @JoinTable()
     users: Array<User>;
 
-    updateMediaCatalog(guildDto: GuildDto) {
+    updateGuild(guildDto: GuildDto) {
         this.id = guildDto.id;
         this.birthdayRole = guildDto.birthdayRole || null;
         this.birthdayChannel = guildDto.birthdayChannel || null;

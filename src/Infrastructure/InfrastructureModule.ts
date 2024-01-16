@@ -9,6 +9,7 @@ import RootService from './Services/Services/RootService';
 import MediaCatalogService from './Services/Services/MediaCatalogService';
 import MediaCatalogStore from './Services/Stores/MediaCatalogStore';
 import GuildStore from './Services/Stores/GuildStore';
+import UserStore from './Services/Stores/UserStore';
 
 @Module({
     imports: [
@@ -30,11 +31,13 @@ import GuildStore from './Services/Stores/GuildStore';
         MediaCatalogService,
         MediaCatalogStore,
         GuildStore,
+        UserStore
     ],
     exports: [
         RootService,
         MediaCatalogService,
         GuildStore,
+        UserStore
     ]
 })
 export default class InfrastructureModule {}

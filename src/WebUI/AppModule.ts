@@ -3,6 +3,7 @@ import RootController from "./Controllers/RootController";
 import MediaCatalogController from "./Controllers/MediaCatalogController";
 import InfrastructureModule from "src/Infrastructure/InfrastructureModule";
 import GuildController from "./Controllers/GuildController";
+import UserController from "./Controllers/UserController";
 
 @Module({
     imports: [
@@ -11,7 +12,8 @@ import GuildController from "./Controllers/GuildController";
     controllers: [
         RootController,
         MediaCatalogController,
-        GuildController
+        GuildController,
+        UserController
     ]
 })
 export default class AppModule {}
