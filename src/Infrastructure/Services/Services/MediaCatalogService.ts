@@ -1,29 +1,34 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { Observable, Subject } from 'rxjs';
 import IMediaCatalogService from 'src/Infrastructure/Interfaces/Services/IMediaCatalogService';
-import MediaCatalogStore from '../Stores/MediaCatalogStore';
-import SocketGateway from 'src/Infrastructure/Adapters/SocketGateway';
-import MediaCatalogDto from 'src/Core/DTO/MediaCatalogDto';
+import IServerSentEventsService from 'src/Infrastructure/Interfaces/Services/IServerSentEventsService';
 import IMediaCatalogStore from 'src/Infrastructure/Interfaces/Stores/IMediaCatalogStore';
+import MediaCatalogStore from '../Stores/MediaCatalogStore';
+import MediaCatalogDto from 'src/Core/DTO/MediaCatalogDto';
 
 @Injectable()
-export default class MediaCatalogService implements IMediaCatalogService, IMediaCatalogStore  {
+export default class MediaCatalogService implements IMediaCatalogService, IServerSentEventsService, IMediaCatalogStore  {
     private readonly logger = new Logger(MediaCatalogService.name);
-    private readonly eventName = 'media-updated';
+    private readonly subject = new Subject<MessageEvent<MediaCatalogDto>>();
 
-    constructor(
-        private readonly mediaCatalogStore: MediaCatalogStore,
-        private readonly socketGateway: SocketGateway
-    ) {}
+    constructor(private readonly mediaCatalogStore: MediaCatalogStore) {}
     
-    @Cron(CronExpression.EVERY_MINUTE)
+    @Cron(CronExpression.EVERY_10_SECONDS)
     private updateTVShowsData(): void {
         this.logger.log('TV Show updated');
-        if (this.socketGateway.getClientsCount() > 0) {
-            this.socketGateway.streamDataToClients(this.eventName, {
-                id: 888, title: 'The Movie',
-            });
-        }
+        const mediaCatalogDto = new MediaCatalogDto();
+        mediaCatalogDto.type = "movie";
+        mediaCatalogDto.title = "The Updated Movie - Part 96";
+        this.sendData(mediaCatalogDto);
+    }
+
+    getObservable(): Observable<MessageEvent<MediaCatalogDto>> {
+        return this.subject.asObservable();
+    }
+
+    sendData(data: MediaCatalogDto): void {
+        this.subject.next(new MessageEvent('message', { data }));
     }
 
     async findAll(): Promise<Array<MediaCatalogDto>> {

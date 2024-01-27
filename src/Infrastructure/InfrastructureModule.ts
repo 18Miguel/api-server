@@ -1,15 +1,17 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
 import typeorm from './Settings/typeorm';
 import CoreModule from 'src/Core/CoreModule';
-import SocketGateway from './Adapters/SocketGateway';
+import AuthService from './Services/Services/AuthService';
 import RootService from './Services/Services/RootService';
 import MediaCatalogService from './Services/Services/MediaCatalogService';
 import MediaCatalogStore from './Services/Stores/MediaCatalogStore';
-import GuildStore from './Services/Stores/GuildStore';
 import UserStore from './Services/Stores/UserStore';
+import ApiKeyGuard from './Guards/ApiKeyGuard';
+import RoleGuard from './Guards/RoleGuard';
 
 @Module({
     imports: [
@@ -26,18 +28,23 @@ import UserStore from './Services/Stores/UserStore';
         ScheduleModule.forRoot(),
     ],
     providers: [
-        SocketGateway,
+        ApiKeyGuard,
+        {
+            provide: APP_GUARD,
+            useClass: RoleGuard,
+        },
         RootService,
+        AuthService,
         MediaCatalogService,
         MediaCatalogStore,
-        GuildStore,
         UserStore
     ],
     exports: [
+        ApiKeyGuard,
         RootService,
+        AuthService,
         MediaCatalogService,
-        GuildStore,
-        UserStore
+        UserStore,
     ]
 })
 export default class InfrastructureModule {}

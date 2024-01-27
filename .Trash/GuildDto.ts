@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+/* import { ApiProperty } from '@nestjs/swagger';
 
 export default class GuildDto {
     @ApiProperty({ required: false })
@@ -10,3 +10,4 @@ export default class GuildDto {
     @ApiProperty({ required: false, nullable: true, default: null })
     birthdayChannel?: string = null;
 }
+ */

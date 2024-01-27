@@ -2,7 +2,7 @@ import { registerAs } from '@nestjs/config';
 import { join } from 'path';
 import { DataSource, DataSourceOptions } from 'typeorm';
 
-const config = {
+const config: DataSourceOptions = {
     type: 'sqlite',
     database: 'database.sqlite',
     synchronize: true,
@@ -15,4 +15,4 @@ const config = {
 };
 
 export default registerAs('typeorm', () => config);
-export const dataSource = new DataSource(config as DataSourceOptions);
+export const dataSource = new DataSource(config);

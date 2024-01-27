@@ -1,9 +1,9 @@
-import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
+/* import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import IGuildStore from "src/Infrastructure/Interfaces/Stores/IGuildStore";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import Guild from "src/Core/Domains/Guild";
-import GuildDto from "src/Core/DTO/GuildDto";
+import GuildDto from "src/!Trash/GuildDto";
 import ObjectMapper from "src/Core/Shared/ObjectMapper";
 import ValidatorRule from "src/Core/Shared/ValidatorRule";
 
@@ -107,3 +107,35 @@ export default class GuildStore implements IGuildStore {
             });
     }
 }
+ */
+//create
+/* if (userDto.guildIds) {
+            const guildsPromises = userDto.guildIds.map(async (guildId) => {
+                const guild = await this.guildRepository.findOneBy({ id: guildId });
+                ValidatorRule
+                    .when(!guild)
+                    .triggerException(new HttpException(
+                        `There is no guild with the given ID ${guildId}.`,
+                        HttpStatus.BAD_REQUEST
+                    ));
+
+                return guild;
+            });
+            user.guilds = await Promise.all(guildsPromises);
+        } */
+
+//update
+/* if (userDto.guildIds) {
+            const guildsPromises = userDto.guildIds.map(async (guildId) => {
+                const guild = await this.guildRepository.findOneBy({ id: guildId });
+                ValidatorRule
+                    .when(!guild)
+                    .triggerException(new HttpException(
+                        `There is no guild with the given ID ${guildId}.`,
+                        HttpStatus.BAD_REQUEST
+                    ));
+
+                return guild;
+            });
+            user.guilds = await Promise.all(guildsPromises);
+        } */

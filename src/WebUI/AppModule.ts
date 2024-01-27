@@ -1,9 +1,9 @@
 import { Module } from "@nestjs/common";
-import RootController from "./Controllers/RootController";
-import MediaCatalogController from "./Controllers/MediaCatalogController";
 import InfrastructureModule from "src/Infrastructure/InfrastructureModule";
-import GuildController from "./Controllers/GuildController";
+import RootController from "./Controllers/RootController";
+import AuthController from "./Controllers/AuthController";
 import UserController from "./Controllers/UserController";
+import MediaCatalogController from "./Controllers/MediaCatalogController";
 
 @Module({
     imports: [
@@ -11,9 +11,9 @@ import UserController from "./Controllers/UserController";
     ],
     controllers: [
         RootController,
+        AuthController,
+        UserController,
         MediaCatalogController,
-        GuildController,
-        UserController
     ]
 })
 export default class AppModule {}

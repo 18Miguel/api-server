@@ -1,36 +1,27 @@
-import {
-    Controller,
-    Get,
-    Post,
-    Body,
-    Param,
-    Delete,
-    Put
-} from '@nestjs/common';
-import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
+import { ApiCreatedResponse, ApiHeader, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import UserDto from 'src/Core/DTO/UserDto';
+import { Roles } from 'src/Core/Types/Decorator/Roles';
+import UserRoles from 'src/Core/Types/Enums/UserRoles';
 import UserStore from 'src/Infrastructure/Services/Stores/UserStore';
 
 @Controller('user')
+@ApiHeader({ name: 'X-API-Key', description: 'Enter your API key.' })
 @ApiTags('Users')
 export default class UserController {
-    constructor(
-        private readonly userStore: UserStore
-    ) {}
+    constructor(private readonly userStore: UserStore) {}
 
     @Get()
-    @ApiOkResponse({
-        type: UserDto,
-        isArray: true,
-    })
+    @Roles(UserRoles.Admin, UserRoles.Bot)
+    @ApiOkResponse({ type: UserDto, isArray: true })
     async findAll() {
         return await this.userStore.findAll();
     }
 
     @Get(':id')
     @ApiOkResponse({ type: UserDto })
-    async findOne(@Param('id') id: number) {
-        return await this.userStore.findOne(id);
+    async findOneById(@Param('id') id: number) {
+        return await this.userStore.findOneById(id);
     }
 
     @Post()

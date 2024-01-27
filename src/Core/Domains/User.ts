@@ -1,31 +1,23 @@
-import { Column, Entity, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
-import Guild from './Guild';
-import UserDto from '../DTO/UserDto';
-import ValidatorRule from '../Shared/ValidatorRule';
-import { HttpException, HttpStatus } from '@nestjs/common';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import UserRoles from '../Types/Enums/UserRoles';
 
 @Entity()
 export default class User {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column({ nullable: true })
-    birthdayDate?: Date = null;
+    @Column({ unique: true })
+    username: string;
 
-    @ManyToMany(() => Guild, (guild) => guild.users)
-    guilds: Array<Guild>;
+    @Column()
+    password: string;
+    
+    @Column({ enum: UserRoles })
+    role: UserRoles;
 
-    updateUser(userDto: UserDto) {
-        ValidatorRule
-            .when(userDto.birthdayDate &&
-                new Date(userDto.birthdayDate).getTime() > new Date().getTime())
-            .triggerException(new HttpException(
-                'The birthday date must be from today onwards.',
-                HttpStatus.BAD_REQUEST
-            ));
+    @Column({ unique: true })
+    apiKey: string;
 
-        this.id = userDto.id;
-        this.birthdayDate = userDto.birthdayDate || null;
-        this.guilds = [];
-    }
+    @Column({ default: new Date().toJSON() })
+    apiKeyCreateAt: Date;
 }

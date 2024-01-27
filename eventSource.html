@@ -1,0 +1,16 @@
+<script type="text/javascript">
+    const eventSource = new EventSource('http://localhost:3000/media-catalog/updated');
+    eventSource.onmessage = (data) => {
+        console.log(data);
+        const message = document.createElement('li');
+        message.innerText = 'New message: ' + data.data;
+        document.body.appendChild(message);
+    }
+    eventSource.onerror = (error) => {
+        console.log(error);
+        const message = document.createElement('li');
+        message.innerText = `Event type: ${event.type}, readyState: ${event.target.readyState}, URL: ${event.target.url}`;
+        document.body.appendChild(message);
+        eventSource.close();
+    }
+</script>

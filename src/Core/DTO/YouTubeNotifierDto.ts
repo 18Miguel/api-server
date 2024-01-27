@@ -1,9 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { IsDefined } from 'class-validator';
+import { MapProp } from 'ts-simple-automapper';
 
 export default class YouTubeNotifierDto {
+    @IsDefined()
     @ApiProperty()
-    id: number;
+    @MapProp()
+    public id: number;
 
     @ApiProperty({ default: '[]' })
-    channelsToPost: string = '[]';
+    @MapProp()
+    public channelsToPost: string = '[]';
 }

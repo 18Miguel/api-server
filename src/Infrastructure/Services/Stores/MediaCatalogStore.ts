@@ -6,21 +6,26 @@ import MediaCatalog from 'src/Core/Domains/MediaCatalog';
 import MediaCatalogDto from 'src/Core/DTO/MediaCatalogDto';
 import ObjectMapper from 'src/Core/Shared/ObjectMapper';
 import ValidatorRule from 'src/Core/Shared/ValidatorRule';
+import { Mapper } from 'ts-simple-automapper';
 
 @Injectable()
 export default class MediaCatalogStore implements IMediaCatalogStore {
+    private readonly mapper: Mapper;
+
     constructor(
         @InjectRepository(MediaCatalog)
-        private mediaCatalogRepository: Repository<MediaCatalog>,
-    ) {}
+        private mediaCatalogRepository: Repository<MediaCatalog>
+    ) {
+        this.mapper = new Mapper();
+    }
 
     async findAll(): Promise<Array<MediaCatalogDto>> {
         return (await this.mediaCatalogRepository.find()).map((mediaCatalog) =>
-            ObjectMapper.mapTo<MediaCatalogDto>(mediaCatalog));
+            this.mapper.map(mediaCatalog, new MediaCatalogDto()));
     }
 
     async findOne(id: number): Promise<MediaCatalogDto> {
-        const existingMedia = await this.mediaCatalogRepository.findOneBy({ id: id });
+        const existingMedia = await this.mediaCatalogRepository.findOneBy({ id: id ?? 0 });
 
         ValidatorRule
             .when(existingMedia == null)
@@ -29,14 +34,14 @@ export default class MediaCatalogStore implements IMediaCatalogStore {
                 HttpStatus.BAD_REQUEST
             ));
 
-        return ObjectMapper.mapTo<MediaCatalogDto>(existingMedia);
+        return this.mapper.map(existingMedia, new MediaCatalogDto());
     }
 
     async create(mediaCatalogDto: MediaCatalogDto): Promise<MediaCatalogDto> {
         ValidatorRule
             .when(mediaCatalogDto.id &&
                 (await this.mediaCatalogRepository
-                    .findOneBy({id: mediaCatalogDto.id })) != null)
+                    .findOneBy({id: mediaCatalogDto.id ?? 0 })) != null)
             .triggerException(new HttpException(
                 'A media with the same ID already exists.',
                 HttpStatus.BAD_REQUEST
@@ -48,7 +53,7 @@ export default class MediaCatalogStore implements IMediaCatalogStore {
 
         return await this.mediaCatalogRepository
             .save(mediaCatalog)
-            .then((insertedMedia) => ObjectMapper.mapTo<MediaCatalogDto>(insertedMedia))
+            .then((insertedMedia) => this.mapper.map(insertedMedia, new MediaCatalogDto()))
             .catch((onrejected) => {
                 throw new HttpException(`${onrejected}`, HttpStatus.INTERNAL_SERVER_ERROR);
             });
@@ -63,7 +68,7 @@ export default class MediaCatalogStore implements IMediaCatalogStore {
             ));
 
         const mediaCatalog = await this.mediaCatalogRepository.findOneBy({
-            id: id || mediaCatalogDto.id,
+            id: (id || mediaCatalogDto.id) ?? 0,
         });
 
         ValidatorRule
@@ -77,7 +82,7 @@ export default class MediaCatalogStore implements IMediaCatalogStore {
 
         return await this.mediaCatalogRepository
             .save(mediaCatalog)
-            .then((updatedMedia) => ObjectMapper.mapTo<MediaCatalogDto>(updatedMedia))
+            .then((updatedMedia) => this.mapper.map(updatedMedia, new MediaCatalogDto()))
             .catch((onrejected) => {
                 throw new HttpException(`${onrejected}`, HttpStatus.INTERNAL_SERVER_ERROR);
             });
@@ -85,7 +90,7 @@ export default class MediaCatalogStore implements IMediaCatalogStore {
 
     async remove(id: number): Promise<void> {
         const existingMedia = await this.mediaCatalogRepository.findOneBy({
-            id: id,
+            id: id ?? 0,
         });
 
         ValidatorRule

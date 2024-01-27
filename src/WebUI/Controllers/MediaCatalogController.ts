@@ -1,22 +1,24 @@
-import {
-    Controller,
-    Get,
-    Post,
-    Body,
-    Param,
-    Delete,
-    Put
-} from '@nestjs/common';
-import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { Controller, UseGuards, Sse, Get, Param, Post, Body, Put, Delete } from '@nestjs/common';
+import { ApiCreatedResponse, ApiExcludeEndpoint, ApiHeader, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { Observable } from 'rxjs';
+import ApiKeyGuard from 'src/Infrastructure/Guards/ApiKeyGuard';
 import MediaCatalogDto from 'src/Core/DTO/MediaCatalogDto';
 import MediaCatalogService from 'src/Infrastructure/Services/Services/MediaCatalogService';
 
 @Controller('media-catalog')
+@UseGuards(ApiKeyGuard)
+@ApiHeader({ name: 'X-API-Key', description: 'Enter your API key.' })
 @ApiTags('Media Catalog')
 export default class MediaCatalogController {
     constructor(
         private readonly mediaCatalogService: MediaCatalogService
     ) {}
+
+    @Sse('updated')
+    @ApiExcludeEndpoint()
+    getObservable(): Observable<MessageEvent<MediaCatalogDto>> {
+        return this.mediaCatalogService.getObservable();
+    }
 
     @Get()
     @ApiOkResponse({

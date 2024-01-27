@@ -1,4 +1,4 @@
-import GuildDto from 'src/Core/DTO/GuildDto';
+/* import GuildDto from 'src/!Trash/GuildDto';
 
 export default interface IGuildStore {
     findAll(): Promise<Array<GuildDto>>;
@@ -7,3 +7,4 @@ export default interface IGuildStore {
     update(id: number, guildDto: GuildDto): Promise<GuildDto>;
     remove(id: number): Promise<void>;
 }
+ */

@@ -1,4 +1,4 @@
-import {
+/* import {
     Controller,
     Get,
     Post,
@@ -8,7 +8,7 @@ import {
     Put
 } from '@nestjs/common';
 import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
-import GuildDto from 'src/Core/DTO/GuildDto';
+import GuildDto from 'src/!Trash/GuildDto';
 import GuildStore from 'src/Infrastructure/Services/Stores/GuildStore';
 
 @Controller('guild')
@@ -51,3 +51,4 @@ export default class GuildController {
         return this.guildStore.remove(id);
     }
 }
+ */
