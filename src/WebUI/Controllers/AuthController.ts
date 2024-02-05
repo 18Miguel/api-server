@@ -1,14 +1,14 @@
-import { Controller, Post, Body, Put, Delete, Param } from '@nestjs/common';
+import { Controller, Post, Body, Put, Delete, Param, Inject } from '@nestjs/common';
 import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import IAuthService from 'src/Infrastructure/Interfaces/Services/IAuthService';
 import UserAuthDto from 'src/Core/DTO/UserAuthDto';
-import AuthService from 'src/Infrastructure/Services/Services/AuthService';
 import UserCredentialsDto from 'src/Core/DTO/UserCredentialsDto';
 import UserUpdateDto from 'src/Core/DTO/UserUpdateDto';
 
 @Controller('auth')
 @ApiTags('Auth')
 export default class AuthController {
-    constructor(private readonly authService: AuthService) {}
+    constructor(@Inject('IAuthService') private readonly authService: IAuthService) {}
     
     @Post('/register')
     @ApiCreatedResponse({ type: UserAuthDto })
@@ -23,7 +23,7 @@ export default class AuthController {
     }
     
     @Put('/update')
-    @ApiOkResponse({ type: UserAuthDto })
+    @ApiCreatedResponse({ type: UserAuthDto })
     update(@Body() userUpdateDto: UserUpdateDto) {
         return this.authService.updateAccount(userUpdateDto);
     }

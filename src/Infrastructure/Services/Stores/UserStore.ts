@@ -1,10 +1,9 @@
-import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
+import { HttpException, HttpStatus, Inject, Injectable } from "@nestjs/common";
 import IUserStore from "src/Infrastructure/Interfaces/Stores/IUserStore";
 import { InjectRepository } from "@nestjs/typeorm";
 import User from "src/Core/Domains/User";
 import { Repository } from "typeorm";
 import UserDto from "src/Core/DTO/UserDto";
-import ObjectMapper from "src/Core/Shared/ObjectMapper";
 import ValidatorRule from "src/Core/Shared/ValidatorRule";
 import { randomBytes } from "crypto";
 import * as bcrypt from 'bcrypt';
@@ -14,17 +13,15 @@ import { Mapper } from "ts-simple-automapper";
 @Injectable()
 export default class UserStore implements IUserStore {
     private readonly saltRounds = 8;
-    private readonly mapper: Mapper;
 
     constructor(
-        @InjectRepository(User) private userRepository: Repository<User>
-    ) {
-        this.mapper = new Mapper();
-    }
+        @InjectRepository(User) private userRepository: Repository<User>,
+        @Inject('Mapper') private readonly mapper: Mapper
+    ) {}
 
     async findAll(): Promise<Array<UserDto>> {
         return (await this.userRepository.find()).map((user) => {
-            const { password, apiKey, ...result } = user;
+            const { password, apiToken, ...result } = user;
             return this.mapper.map(result, new UserDto());
         });
     }
@@ -40,7 +37,8 @@ export default class UserStore implements IUserStore {
                 HttpStatus.BAD_REQUEST
             ));
 
-        return this.mapper.map(existingUser, new UserDto());
+        const { password, apiToken, ...result } = existingUser;
+        return this.mapper.map(result, new UserDto());
     }
 
     async findOneByUsername(username: string): Promise<UserDto> {
@@ -56,8 +54,8 @@ export default class UserStore implements IUserStore {
         return this.mapper.map(existingUser, new UserDto());
     }
 
-    async findOneByApiKey(apiKey: string): Promise<UserDto> {
-        const existingUser = await this.userRepository.findOneBy({ apiKey: apiKey ?? '' })
+    async findOneByApiToken(apiToken: string): Promise<UserDto> {
+        const existingUser = await this.userRepository.findOneBy({ apiToken: apiToken ?? '' })
 
         ValidatorRule
             .when(!existingUser)
@@ -101,7 +99,7 @@ export default class UserStore implements IUserStore {
         user.username = userDto.username;
         user.password = await bcrypt.hash(userDto.password, this.saltRounds);
         user.role = UserRoles.User;
-        user.apiKey = randomBytes(16).toString('hex');
+        user.apiToken = randomBytes(32).toString('hex');
 
         return await this.userRepository
             .save(user)
@@ -144,11 +142,15 @@ export default class UserStore implements IUserStore {
                 HttpStatus.BAD_REQUEST
             ));
 
-        user.username = userDto.username;
-        user.password = await bcrypt.hash(userDto.password, this.saltRounds);
+        if (user.username) {
+            user.username = userDto.username;
+        }
+        if (userDto.password) {
+            user.password = await bcrypt.hash(userDto.password, this.saltRounds);
+        }
         user.role = userDto.role || user.role || UserRoles.User;
-        user.apiKey = randomBytes(16).toString('hex');
-        user.apiKeyCreateAt = new Date();
+        user.apiToken = randomBytes(32).toString('hex');
+        user.apiTokenCreateAt = new Date();
 
         return await this.userRepository
             .save(user)

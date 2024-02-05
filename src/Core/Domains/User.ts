@@ -1,23 +1,35 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import UserRoles from '../Types/Enums/UserRoles';
+import { MapProp } from 'ts-simple-automapper';
+import MediaCatalogUser from './MediaCatalogUser';
 
 @Entity()
 export default class User {
     @PrimaryGeneratedColumn()
-    id: number;
+    @MapProp()
+    public id: number;
 
     @Column({ unique: true })
-    username: string;
+    @MapProp()
+    public username: string;
 
     @Column()
-    password: string;
+    @MapProp()
+    public password: string;
     
     @Column({ enum: UserRoles })
-    role: UserRoles;
+    @MapProp()
+    public role: UserRoles;
 
     @Column({ unique: true })
-    apiKey: string;
+    @MapProp()
+    public apiToken: string;
 
     @Column({ default: new Date().toJSON() })
-    apiKeyCreateAt: Date;
+    @MapProp()
+    public apiTokenCreateAt: Date;
+
+    @OneToMany(() => MediaCatalogUser, mediaCatalogUser => mediaCatalogUser.user)
+    @JoinColumn()
+    public mediaCatalogList: Array<MediaCatalogUser>;
 }

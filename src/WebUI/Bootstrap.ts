@@ -1,9 +1,10 @@
+import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import * as bcrypt from 'bcrypt';
+import { StorageDriver, initializeTransactionalContext } from 'typeorm-transactional';
 import AppModule from './AppModule';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { dataSource } from 'src/Infrastructure/Settings/typeorm';
-import * as bcrypt from 'bcrypt';
 import User from 'src/Core/Domains/User';
 import UserRoles from 'src/Core/Types/Enums/UserRoles';
 import { randomBytes } from 'crypto';
@@ -15,8 +16,9 @@ async function databaseSeed() {
         username: 'admin',
         password: await bcrypt.hash('admin', 5),
         role: UserRoles.Admin,
-        apiKey: randomBytes(16).toString('hex'),
-        apiKeyCreateAt: new Date()
+        apiToken: randomBytes(32).toString('hex'),
+        apiTokenCreateAt: new Date(),
+        mediaCatalogList: []
     };
 
     try {
@@ -28,8 +30,11 @@ async function databaseSeed() {
 }
 
 export async function Bootstrap(): Promise<INestApplication> {
+    initializeTransactionalContext({ storageDriver: StorageDriver.AUTO });
+    
     const app = await NestFactory.create(AppModule);
     const config = new DocumentBuilder()
+        .addBearerAuth()
         .setTitle('API Server 🐈')
         .setDescription('Custom API Server')
         .setVersion('1.0')

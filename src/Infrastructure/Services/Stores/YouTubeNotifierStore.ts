@@ -1,8 +1,7 @@
-import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
+import { HttpException, HttpStatus, Inject, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import YouTubeNotifierDto from "src/Core/DTO/YouTubeNotifierDto";
 import YouTubeNotifier from "src/Core/Domains/YouTubeNotifier";
-import ObjectMapper from "src/Core/Shared/ObjectMapper";
 import ValidatorRule from "src/Core/Shared/ValidatorRule";
 import IYouTubeNotifierStore from "src/Infrastructure/Interfaces/Stores/IYouTubeNotifierStore";
 import { Mapper } from "ts-simple-automapper";
@@ -10,14 +9,11 @@ import { Repository } from "typeorm";
 
 @Injectable()
 export default class YouTubeNotifierStore implements IYouTubeNotifierStore {
-    private readonly mapper: Mapper;
-
     constructor(
         @InjectRepository(YouTubeNotifier)
-        private youtubeNotifierRepository: Repository<YouTubeNotifier>
-    ) {
-        this.mapper = new Mapper();
-    }
+        private youtubeNotifierRepository: Repository<YouTubeNotifier>,
+        @Inject('Mapper') private readonly mapper: Mapper
+    ) {}
 
     async findAll(): Promise<Array<YouTubeNotifierDto>> {
         return (await this.youtubeNotifierRepository.find()).map((youtubeNotifier) =>

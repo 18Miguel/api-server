@@ -1,8 +1,7 @@
-import { HttpException, HttpStatus, Injectable, UnauthorizedException } from "@nestjs/common";
+import { HttpException, HttpStatus, Inject, Injectable, UnauthorizedException } from "@nestjs/common";
 import * as bcrypt from 'bcrypt';
 import IAuthService from "src/Infrastructure/Interfaces/Services/IAuthService";
-import UserStore from "../Stores/UserStore";
-import ObjectMapper from "src/Core/Shared/ObjectMapper";
+import IUserStore from "src/Infrastructure/Interfaces/Stores/IUserStore";
 import UserDto from "src/Core/DTO/UserDto";
 import UserCredentialsDto from "src/Core/DTO/UserCredentialsDto";
 import UserAuthDto from "src/Core/DTO/UserAuthDto";
@@ -13,11 +12,10 @@ import { Mapper } from "ts-simple-automapper";
 
 @Injectable()
 export default class AuthService implements IAuthService {
-    private readonly mapper: Mapper;
-
-    constructor(private readonly userStore: UserStore) {
-        this.mapper = new Mapper();
-    }
+    constructor(
+        @Inject('IUserStore') private readonly userStore: IUserStore,
+        @Inject('Mapper') private readonly mapper: Mapper
+    ) {}
 
     async registerNewAccount(userCredentialsDto: UserCredentialsDto): Promise<UserAuthDto> {
         const user = await this.userStore.create(this.mapper.map(userCredentialsDto, new UserDto()));
@@ -32,7 +30,7 @@ export default class AuthService implements IAuthService {
             .when(!passwordValid)
             .triggerException(new UnauthorizedException());
 
-        return new Mapper().map(user, new UserAuthDto());
+        return this.mapper.map(user, new UserAuthDto());
     }
 
     async updateAccount(userUpdateDto: UserUpdateDto): Promise<UserAuthDto> {
@@ -66,26 +64,40 @@ export default class AuthService implements IAuthService {
         return await this.userStore.remove(user.id);
     }
 
-    async isAPIKeyValid(apiKey: string): Promise<boolean> {
-        const user = await this.userStore.findOneByApiKey(apiKey);
+    async isAPITokenValid(apiToken: string): Promise<{ validToken: boolean, userId: number }> {
+        ValidatorRule
+            .when(!apiToken)
+            .triggerException(new UnauthorizedException("An API token is required for this operation."));
+
+        const user = await this.userStore.findOneByApiToken(apiToken);
 
         ValidatorRule
             .when(!user)
             .triggerException(new UnauthorizedException("Invalid API key."));
 
-        return true;
+        return { validToken: true, userId: user.id };
     }
     
-    async isRoleValid(apiKey: string) {
-        const user = await this.userStore.findOneByApiKey(apiKey);
+    async findUserByApiToken(apiToken: string): Promise<UserDto> {
+        const user = await this.userStore.findOneByApiToken(apiToken);
 
         ValidatorRule
             .when(!user)
             .triggerException(new UnauthorizedException("Invalid API key."));
+
+        return user;
+    }
+    
+    async isRoleValid(apiToken: string) {
+        const user = await this.userStore.findOneByApiToken(apiToken);
+
+        ValidatorRule
+            .when(!user)
+            .triggerException(new UnauthorizedException("Invalid API token."));
 
         ValidatorRule
             .when(user.role === UserRoles.User)
-            .when(user.role === UserRoles.Bot)
+            .when(user.role === UserRoles.Manager)
             .triggerException(new UnauthorizedException());
 
         return true;

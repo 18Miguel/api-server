@@ -19,15 +19,15 @@ export default class UserDto {
     public password?: string;
 
     @IsEnum(UserRoles, { always: false })
-    @ApiProperty({ required: false })
+    @ApiProperty({ required: false, enum: UserRoles })
     @MapProp()
     public role?: UserRoles;
 
     @ApiProperty({ required: false })
     @MapProp()
-    public apiKey?: string;
+    public apiToken?: string;
     
     @ApiProperty({ required: false })
     @MapProp()
-    public apiKeyCreateAt?: Date;
+    public apiTokenCreateAt?: Date;
 }

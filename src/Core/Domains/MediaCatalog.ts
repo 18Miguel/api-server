@@ -1,30 +1,43 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import MediaCatalogDto from '../DTO/MediaCatalogDto';
 import ValidatorRule from '../Shared/ValidatorRule';
 import { HttpException, HttpStatus } from '@nestjs/common';
+import { MapProp } from 'ts-simple-automapper';
+import MediaCatalogUser from './MediaCatalogUser';
 
 @Entity()
 export default class MediaCatalog {
     @PrimaryGeneratedColumn()
-    id: number;
+    @MapProp()
+    public id: number;
 
     @Column()
-    type: string;
+    @MapProp()
+    public type: string;
 
     @Column()
-    title: string;
+    @MapProp()
+    public title: string;
 
     @Column()
-    releaseDate: Date;
+    @MapProp()
+    public releaseDate: Date;
 
     @Column()
-    genres: string;
+    @MapProp()
+    public genres: string;
 
     @Column({ nullable: true, default: null })
-    numberOfEpisodes?: number = null;
+    @MapProp()
+    public numberOfEpisodes?: number = null;
+    
+    @Column({ nullable: true, default: null })
+    @MapProp()
+    public inProduction?: boolean = null;
 
-    @Column()
-    watched: boolean;
+    @OneToMany(() => MediaCatalogUser, mediaCatalogUser => mediaCatalogUser.mediaCatalog)
+    @JoinColumn()
+    public usersList: Array<MediaCatalogUser>;
 
     updateMediaCatalog(mediaCatalogDto: MediaCatalogDto): void {
         ValidatorRule
@@ -72,7 +85,7 @@ export default class MediaCatalog {
         this.title = mediaCatalogDto.title;
         this.releaseDate = mediaCatalogDto.releaseDate;
         this.genres = mediaCatalogDto.genres || '';
-        this.numberOfEpisodes = mediaCatalogDto.numberOfEpisodes || null;
-        this.watched = mediaCatalogDto.watched;
+        this.numberOfEpisodes = mediaCatalogDto.numberOfEpisodes ?? null;
+        this.inProduction = mediaCatalogDto.inProduction ?? null;
     }
 }

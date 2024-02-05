@@ -14,9 +14,9 @@ export default class UserAuthDto {
 
     @ApiProperty({ required: false })
     @MapProp()
-    public apiKey: string;
+    public apiToken: string;
     
     @ApiProperty({ required: false })
     @MapProp()
-    public apiKeyCreateAt: Date;
+    public apiTokenCreateAt: Date;
 }

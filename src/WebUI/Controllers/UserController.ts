@@ -1,42 +1,51 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
-import { ApiCreatedResponse, ApiHeader, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Delete, Get, Inject, Param, Put } from '@nestjs/common';
+import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { Mapper } from 'ts-simple-automapper';
 import UserDto from 'src/Core/DTO/UserDto';
+import UserManageDto from 'src/Core/DTO/UserManageDto';
 import { Roles } from 'src/Core/Types/Decorator/Roles';
+import IUserStore from 'src/Infrastructure/Interfaces/Stores/IUserStore';
 import UserRoles from 'src/Core/Types/Enums/UserRoles';
-import UserStore from 'src/Infrastructure/Services/Stores/UserStore';
 
 @Controller('user')
-@ApiHeader({ name: 'X-API-Key', description: 'Enter your API key.' })
+@ApiBearerAuth()
 @ApiTags('Users')
 export default class UserController {
-    constructor(private readonly userStore: UserStore) {}
+    constructor(
+        @Inject('IUserStore') private readonly userStore: IUserStore,
+        @Inject('Mapper') private readonly mapper: Mapper
+    ) {}
 
     @Get()
-    @Roles(UserRoles.Admin, UserRoles.Bot)
+    @Roles(UserRoles.Admin, UserRoles.Manager)
     @ApiOkResponse({ type: UserDto, isArray: true })
     async findAll() {
         return await this.userStore.findAll();
     }
 
     @Get(':id')
+    @Roles(UserRoles.Admin, UserRoles.Manager)
     @ApiOkResponse({ type: UserDto })
     async findOneById(@Param('id') id: number) {
         return await this.userStore.findOneById(id);
     }
 
-    @Post()
+    /* @Post()
+    @Roles(UserRoles.Admin)
     @ApiCreatedResponse({ type: UserDto })
     create(@Body() userDto: UserDto) {
         return this.userStore.create(userDto);
-    }
+    } */
 
-    @ApiOkResponse({ type: UserDto })
-    @Put(':id')
-    update(@Param('id') id: number, @Body() userDto: UserDto) {
-        return this.userStore.update(id, userDto);
+    @Put('role/:id')
+    @Roles(UserRoles.Admin)
+    @ApiCreatedResponse({ type: UserDto })
+    update(@Param('id') id: number, @Body() userManageDto: UserManageDto) {
+        return this.userStore.update(id, this.mapper.map(userManageDto, new UserDto()));
     }
 
     @Delete(':id')
+    @Roles(UserRoles.Admin)
     @ApiOkResponse()
     remove(@Param('id') id: number) {
         return this.userStore.remove(id);

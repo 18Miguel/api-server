@@ -1,6 +1,6 @@
 enum UserRoles {
     Admin,
-    Bot,
+    Manager,
     User,
 };
 

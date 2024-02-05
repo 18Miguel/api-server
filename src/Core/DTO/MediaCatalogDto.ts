@@ -1,24 +1,26 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsDate, IsNotEmpty, IsPositive, Min } from 'class-validator';
+import { IsBoolean, IsDateString, IsNotEmpty, IsPositive, Min, ValidateIf } from 'class-validator';
 import { MapProp } from 'ts-simple-automapper';
+import MediaTypes from '../Types/Enums/MediaTypes';
 
 export default class MediaCatalogDto {
     @IsPositive()
+    @ValidateIf((_, value) => value !== undefined)
     @ApiProperty({ required: false })
     @MapProp()
     public id?: number;
 
     @IsNotEmpty()
-    @ApiProperty({ required: true })
+    @ApiProperty({ required: true, enum: MediaTypes })
     @MapProp()
-    public type: string;
+    public type: MediaTypes;
 
     @IsNotEmpty()
     @ApiProperty({ required: true })
     @MapProp()
     public title: string;
 
-    @IsDate()
+    @IsDateString()
     @ApiProperty({ required: true })
     @MapProp()
     public releaseDate: Date;
@@ -28,12 +30,21 @@ export default class MediaCatalogDto {
     public genres: string;
 
     @Min(0)
+    @ValidateIf((_, value) => value != undefined || value != null)
     @ApiProperty({ required: false, nullable: true, minimum: 0, default: null })
     @MapProp()
-    public numberOfEpisodes?: number = null;
+    public numberOfEpisodes?: number;
+    
+    @IsBoolean()
+    @ValidateIf((_, value) => value != undefined || value != null)
+    @ApiProperty({ required: false, nullable: true, default: null })
+    @MapProp()
+    public inProduction?: boolean;
 
     @IsBoolean()
     @ApiProperty({ required: true, default: false })
     @MapProp()
-    watched: boolean;
+    public watched: boolean;
+
+    public userId: number;
 }

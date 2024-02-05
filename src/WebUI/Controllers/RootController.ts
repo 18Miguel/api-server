@@ -1,11 +1,11 @@
-import { Controller, Get, Res } from '@nestjs/common';
+import { Controller, Get, Inject, Res } from '@nestjs/common';
 import { ApiExcludeEndpoint } from '@nestjs/swagger';
 import { Response } from 'express';
-import RootService from 'src/Infrastructure/Services/Services/RootService';
+import IRootService from 'src/Infrastructure/Interfaces/Services/IRootServices';
 
 @Controller()
 export default class RootController {
-    constructor(private readonly rootService: RootService) {}
+    constructor(@Inject('IRootService') private readonly rootService: IRootService) {}
 
     @ApiExcludeEndpoint()
     @Get()
