@@ -1,9 +1,10 @@
-import { Controller, Post, Body, Put, Delete, Param, Inject } from '@nestjs/common';
-import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { Controller, Post, Body, Put, Delete, Param, Inject, Req, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import IAuthService from 'src/Infrastructure/Interfaces/Services/IAuthService';
 import UserAuthDto from 'src/Core/DTO/UserAuthDto';
 import UserCredentialsDto from 'src/Core/DTO/UserCredentialsDto';
 import UserUpdateDto from 'src/Core/DTO/UserUpdateDto';
+import ApiTokenGuard from 'src/Infrastructure/Guards/ApiTokenGuard';
 
 @Controller('auth')
 @ApiTags('Auth')
@@ -23,14 +24,20 @@ export default class AuthController {
     }
     
     @Put('/update')
+    @ApiBearerAuth()
+    @UseGuards(ApiTokenGuard)
     @ApiCreatedResponse({ type: UserAuthDto })
-    update(@Body() userUpdateDto: UserUpdateDto) {
-        return this.authService.updateAccount(userUpdateDto);
+    update(@Req() request: Request, @Body() userUpdateDto: UserUpdateDto) {
+        const userId = Number(request.headers['User-Id'] ?? request.headers['user-id']);
+        return this.authService.updateAccount(userId, userUpdateDto);
     }
     
-    @Delete('/delete/:id')
+    @Delete('/delete')
+    @ApiBearerAuth()
+    @UseGuards(ApiTokenGuard)
     @ApiOkResponse()
-    delete(@Param('id') id: number, @Body() userCredentialsDto: UserCredentialsDto) {
-        return this.authService.deleteAccount(id, userCredentialsDto);
+    delete(@Req() request: Request, @Body() userCredentialsDto: UserCredentialsDto) {
+        const userId = Number(request.headers['User-Id'] ?? request.headers['user-id']);
+        return this.authService.deleteAccount(userId, userCredentialsDto);
     }
 }

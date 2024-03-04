@@ -1,6 +1,9 @@
+import { registerEnumType } from "@nestjs/graphql";
+
 enum MediaTypes {
     Movie = 'movie',
-    Tv = 'tv',
+    TvShow = 'tv',
 };
+registerEnumType(MediaTypes, { name: 'MediaTypes' });
 
 export default MediaTypes;

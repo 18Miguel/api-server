@@ -3,6 +3,9 @@
 /node_modules
 package-lock.json
 
+# SQLite
+*.sqlite
+
 # Logs
 logs
 *.log

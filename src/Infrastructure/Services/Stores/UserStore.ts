@@ -19,14 +19,16 @@ export default class UserStore implements IUserStore {
         @Inject('Mapper') private readonly mapper: Mapper
     ) {}
 
-    async findAll(): Promise<Array<UserDto>> {
+    public async findAll(): Promise<Array<UserDto>> {
         return (await this.userRepository.find()).map((user) => {
             const { password, apiToken, ...result } = user;
             return this.mapper.map(result, new UserDto());
         });
+        /* const users = await this.userRepository.find();
+        return this.mapper.mapList(users, UserDto); */
     }
 
-    async findOneById(id: number): Promise<UserDto> {
+    public async findOneById(id: number): Promise<UserDto> {
         const existingUser = await this.userRepository.findOneBy({ id: id ?? 0 });
 
         ValidatorRule
@@ -37,11 +39,11 @@ export default class UserStore implements IUserStore {
                 HttpStatus.BAD_REQUEST
             ));
 
-        const { password, apiToken, ...result } = existingUser;
+        const { apiToken, ...result } = existingUser;
         return this.mapper.map(result, new UserDto());
     }
 
-    async findOneByUsername(username: string): Promise<UserDto> {
+    public async findOneByUsername(username: string): Promise<UserDto> {
         const existingUser = await this.userRepository.findOneBy({ username: username ?? ''});
 
         ValidatorRule
@@ -54,7 +56,7 @@ export default class UserStore implements IUserStore {
         return this.mapper.map(existingUser, new UserDto());
     }
 
-    async findOneByApiToken(apiToken: string): Promise<UserDto> {
+    public async findOneByApiToken(apiToken: string): Promise<UserDto> {
         const existingUser = await this.userRepository.findOneBy({ apiToken: apiToken ?? '' })
 
         ValidatorRule
@@ -68,7 +70,7 @@ export default class UserStore implements IUserStore {
         return this.mapper.map(existingUser, new UserDto());
     }
 
-    async create(userDto: UserDto): Promise<UserDto> {
+    public async create(userDto: UserDto): Promise<UserDto> {
         ValidatorRule
             .when(!userDto.username)
             .triggerException(new HttpException(
@@ -112,7 +114,7 @@ export default class UserStore implements IUserStore {
             });
     }
 
-    async update(id: number, userDto: UserDto): Promise<UserDto> {
+    public async update(id: number, userDto: UserDto): Promise<UserDto> {
         ValidatorRule
             .when(id != userDto.id)
             .triggerException(new HttpException(
@@ -136,7 +138,7 @@ export default class UserStore implements IUserStore {
         });
 
         ValidatorRule
-            .when(!existingUser && existingUser.id != userDto.id)
+            .when(!!existingUser && existingUser.id != userDto.id)
             .triggerException(new HttpException(
                 'The username is already taken.',
                 HttpStatus.BAD_REQUEST
@@ -148,7 +150,7 @@ export default class UserStore implements IUserStore {
         if (userDto.password) {
             user.password = await bcrypt.hash(userDto.password, this.saltRounds);
         }
-        user.role = userDto.role || user.role || UserRoles.User;
+        user.role = userDto.role ?? user.role ?? UserRoles.User;
         user.apiToken = randomBytes(32).toString('hex');
         user.apiTokenCreateAt = new Date();
 
@@ -163,7 +165,7 @@ export default class UserStore implements IUserStore {
             });
     }
 
-    async remove(id: number): Promise<void> {
+    public async remove(id: number): Promise<boolean> {
         const existingUser = await this.userRepository.findOneBy({
             id: id ?? 0
         });
@@ -177,7 +179,7 @@ export default class UserStore implements IUserStore {
 
         return await this.userRepository
             .remove(existingUser)
-            .then(() => {})
+            .then(() => true)
             .catch((onrejected) => {
                 throw new HttpException(
                     `${onrejected}`,

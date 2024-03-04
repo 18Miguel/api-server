@@ -3,7 +3,7 @@ import MediaTypes from "../Types/Enums/MediaTypes";
 
 export default class SearchedMediaDto {
     @ApiProperty()
-    public id: number;
+    public tmdbId: number;
 
     @ApiProperty({ enum: MediaTypes })
     public mediaType: MediaTypes;

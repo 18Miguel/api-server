@@ -8,9 +8,7 @@ const config: DataSourceOptions = {
     synchronize: true,
     logging: true,
     entities: [join(__dirname, '/../../**/Core/Domains/*{.ts,.js}')],
-    migrations: [
-        join(__dirname, '/../../**/Infrastructure/Migrations/*{.ts,.js}'),
-    ],
+    migrations: [join(__dirname, '/../../**/Infrastructure/Migrations/*{.ts,.js}')],
     migrationsRun: true,
 };
 

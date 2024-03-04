@@ -1,95 +1,73 @@
-import { Controller, UseGuards, Sse, Get, Param, Post, Req, Inject, Delete, HttpException, HttpStatus, Query } from '@nestjs/common';
-import { ApiBearerAuth, ApiCreatedResponse, ApiExcludeEndpoint, ApiExtraModels, ApiOkResponse, ApiParam, ApiQuery, ApiTags, refs } from '@nestjs/swagger';
+import { Controller, UseGuards, Sse, Get, Param, Post, Req, Inject, Delete, HttpException, HttpStatus, Body } from '@nestjs/common';
+import { ApiBearerAuth, ApiCreatedResponse, ApiExcludeEndpoint, ApiExtraModels, ApiOkResponse, ApiTags, refs } from '@nestjs/swagger';
 import { Observable } from 'rxjs';
 import { Request } from 'express';
-import MediaCatalogDto from 'src/Core/DTO/MediaCatalogDto';
-import IMediaCatalogService from 'src/Infrastructure/Interfaces/Services/IMediaCatalogService';
+import MediaDto from 'src/Core/DTO/MediaDto';
+import IMediaService from 'src/Infrastructure/Interfaces/Services/IMediaService';
 import ApiTokenGuard from 'src/Infrastructure/Guards/ApiTokenGuard';
 import SearchedMediaDto from 'src/Core/DTO/SearchedMediaDto';
-import MovieMediaDto from 'src/Core/DTO/MovieMediaDto';
-import TvMediaDto from 'src/Core/DTO/TvMediaDto';
 import MediaTypes from 'src/Core/Types/Enums/MediaTypes';
-import { boolean } from 'zod';
+import MovieMediaDto from 'src/Core/DTO/MovieMediaDto';
+import TvMediaDto from 'src/Core/DTO/TvShowMediaDto';
+import SetMediaDto from 'src/Core/DTO/setMediaDto';
+import ValidatorRule from 'src/Core/Shared/ValidatorRule';
 
-@Controller('media-catalog')
+@Controller('media')
 @ApiBearerAuth()
 @UseGuards(ApiTokenGuard)
 @ApiTags('Media Catalog')
 export default class MediaCatalogController {
     constructor(
-        @Inject('IMediaCatalogService')
-        private readonly mediaCatalogService: IMediaCatalogService
+        @Inject('IMediaService')
+        private readonly mediaService: IMediaService
     ) {}
 
-    @Sse('updated')
+    @Sse('catalog/tv/updated')
     @ApiExcludeEndpoint()
-    getObservable(): Observable<MessageEvent<MediaCatalogDto>> {
-        return this.mediaCatalogService.getObservable();
+    getObservable(@Req() request: Request): Observable<MessageEvent<TvMediaDto>> {
+        const userId = Number(request.headers['User-Id'] ?? request.headers['user-id']);
+        return this.mediaService.getObservable(userId);
     }
 
-    @Get()
-    @ApiOkResponse({ type: MediaCatalogDto, isArray: true })
-    async findAll() {
-        return await this.mediaCatalogService.findAll();
-    }
-
-    @Get(':id')
-    @ApiOkResponse({ type: MediaCatalogDto })
-    async findOneById(@Param('id') id: number) {
-        return await this.mediaCatalogService.findOneById(id);
-    }
-    
     @Get('search/:title')
     @ApiOkResponse({ type: SearchedMediaDto, isArray: true })
     async fetchDetailsByTitle(@Param('title') title: string) {
-        return await this.mediaCatalogService.fetchDetailsByTitle(title);
+        return await this.mediaService.fetchDetailsByTitle(title);
     }
 
-    @Post('mark/:media_type/:id')
-    @ApiExtraModels(MovieMediaDto, TvMediaDto)
-    @ApiCreatedResponse({ schema: { anyOf: refs(MovieMediaDto, TvMediaDto) } })
-    @ApiParam({ name: 'media_type', enum: MediaTypes })
-    @ApiQuery({ name: 'watched', type: Boolean, required: false, description: 'Default value: false' })
-    async markMedia(
-        @Param('media_type') mediaType: MediaTypes,
-        @Param('id') id: number,
-        @Query('watched') watched: string = 'false',
-        @Req() request: Request
-    ) {
+    @Get('catalog/:id')
+    @ApiOkResponse({ type: MediaDto })
+    async findOneById(@Param('id') id: number, @Req() request: Request) {
         const userId = Number(request.headers['User-Id'] ?? request.headers['user-id']);
-        switch (mediaType) {
-            case MediaTypes.Movie:
-                return await this.mediaCatalogService.markMovieMedia(id, watched === 'true', userId);
-            case MediaTypes.Tv:
-                return await this.mediaCatalogService.markTvMedia(id, watched === 'true', userId);
-            default:
-                throw new HttpException(`Unsupported media type: ${mediaType}`, HttpStatus.BAD_REQUEST);
-        }
+        return await this.mediaService.findOneById(id, userId);
     }
-    @Delete('remove/:id')
+
+    @Post('catalog')
+    @ApiExtraModels(MovieMediaDto, TvMediaDto)
+    @ApiCreatedResponse({ schema: { oneOf: refs(MovieMediaDto, TvMediaDto) } })
+    async markMedia(@Body() setMediaDto: SetMediaDto, @Req() request: Request) {
+        ValidatorRule
+            .when(!Object.values(MediaTypes).includes(setMediaDto.mediaType))
+            .triggerException(new HttpException(
+                `Unsupported media type: ${setMediaDto.mediaType}`,
+                HttpStatus.BAD_REQUEST
+            ));
+        const userId = Number(request.headers['User-Id'] ?? request.headers['user-id']);
+        return await this.mediaService.markMedia(setMediaDto.tmdbId, setMediaDto.watched, userId, setMediaDto.mediaType);
+        /* switch (setMediaDto.mediaType) {
+            case MediaTypes.Movie:
+                return await this.mediaService.markMovieMedia(setMediaDto.id, setMediaDto.watched, userId);
+            case MediaTypes.TvShow:
+                return await this.mediaService.markTvMedia(setMediaDto.id, setMediaDto.watched, userId);
+            default:
+                throw new HttpException(`Unsupported media type: ${setMediaDto.mediaType}`, HttpStatus.BAD_REQUEST);
+        } */
+    }
+
+    @Delete('catalog/:id')
     @ApiCreatedResponse({ type: SearchedMediaDto })
     async removeMedia(@Param('id') id: number, @Req() request: Request) {
         const userId = Number(request.headers['User-Id'] ?? request.headers['user-id']);
-        return await this.mediaCatalogService.removeMedia(id, userId);
+        return await this.mediaService.removeFromUserCatalog(id, userId);
     }
-
-    /* @Post()
-    @ApiCreatedResponse({ type: MediaCatalogDto })
-    create(@Body() mediaCatalogDto: MediaCatalogDto, @Req() request: Request) {
-        mediaCatalogDto.userId = Number(request.headers['User-Id'] ?? request.headers['user-id']);
-        return //this.mediaCatalogService.addMedia(mediaCatalogDto);
-    } */
-
-    /* @ApiCreatedResponse({ type: MediaCatalogDto })
-    @Put(':id')
-    update(@Param('id') id: number, @Body() mediaCatalogDto: MediaCatalogDto, @Req() request: Request) {
-        mediaCatalogDto.userId = Number(request.headers['User-Id'] ?? request.headers['user-id']);
-        //return this.mediaCatalogService.update(id, mediaCatalogDto);
-    } */
-
-    /* @Delete(':id')
-    @ApiOkResponse()
-    remove(@Param('id') id: number) {
-        //return this.mediaCatalogService.remove(id);
-    } */
 }

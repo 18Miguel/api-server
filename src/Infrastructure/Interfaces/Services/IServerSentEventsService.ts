@@ -1,7 +1,7 @@
 import { Observable } from 'rxjs';
-import MediaCatalogDto from 'src/Core/DTO/MediaCatalogDto';
+import MediaDto from 'src/Core/DTO/MediaDto';
 
 export default interface IServerSentEventsService {
-    getObservable(): Observable<MessageEvent<MediaCatalogDto>>;
-    sendData(data: any): void;
+    getObservable(roomId: number): Observable<MessageEvent<MediaDto>>;
+    sendData(roomId: number, data: any): void;
 }

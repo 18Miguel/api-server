@@ -18,7 +18,7 @@ async function databaseSeed() {
         role: UserRoles.Admin,
         apiToken: randomBytes(32).toString('hex'),
         apiTokenCreateAt: new Date(),
-        mediaCatalogList: []
+        mediaCatalog: []
     };
 
     try {

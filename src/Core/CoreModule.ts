@@ -1,22 +1,19 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import MediaCatalog from './Domains/MediaCatalog';
+import Media from './Domains/Media';
 import User from './Domains/User';
-import YouTubeNotifier from './Domains/YouTubeNotifier';
-import MediaCatalogUser from './Domains/MediaCatalogUser';
+import UserMediaCatalog from './Domains/UserMediaCatalog';
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([MediaCatalog]),
-        TypeOrmModule.forFeature([MediaCatalogUser]),
+        TypeOrmModule.forFeature([Media]),
+        TypeOrmModule.forFeature([UserMediaCatalog]),
         TypeOrmModule.forFeature([User]),
-        TypeOrmModule.forFeature([YouTubeNotifier]),
     ],
     exports: [
-        TypeOrmModule.forFeature([MediaCatalog]),
-        TypeOrmModule.forFeature([MediaCatalogUser]),
+        TypeOrmModule.forFeature([Media]),
+        TypeOrmModule.forFeature([UserMediaCatalog]),
         TypeOrmModule.forFeature([User]),
-        TypeOrmModule.forFeature([YouTubeNotifier]),
     ]
 })
 export default class CoreModule {}

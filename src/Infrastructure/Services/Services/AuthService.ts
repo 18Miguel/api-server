@@ -17,12 +17,12 @@ export default class AuthService implements IAuthService {
         @Inject('Mapper') private readonly mapper: Mapper
     ) {}
 
-    async registerNewAccount(userCredentialsDto: UserCredentialsDto): Promise<UserAuthDto> {
+    public async registerNewAccount(userCredentialsDto: UserCredentialsDto): Promise<UserAuthDto> {
         const user = await this.userStore.create(this.mapper.map(userCredentialsDto, new UserDto()));
         return this.mapper.map(user, new UserAuthDto());
     }
 
-    async login(userCredentialsDto: UserCredentialsDto): Promise<UserAuthDto> {
+    public async login(userCredentialsDto: UserCredentialsDto): Promise<UserAuthDto> {
         const user = await this.userStore.findOneByUsername(userCredentialsDto.username);
         const passwordValid = await bcrypt.compare(userCredentialsDto.password, user.password);
 
@@ -33,38 +33,42 @@ export default class AuthService implements IAuthService {
         return this.mapper.map(user, new UserAuthDto());
     }
 
-    async updateAccount(userUpdateDto: UserUpdateDto): Promise<UserAuthDto> {
-        const user = await this.userStore.findOneById(userUpdateDto.id);
+    public async updateAccount(id: number, userUpdateDto: UserUpdateDto): Promise<UserAuthDto> {
+        const user = await this.userStore.findOneById(id);
 
         ValidatorRule
             .when(!user)
             .when(!(await bcrypt.compare(userUpdateDto.previousPassword, user.password)))
             .triggerException(new UnauthorizedException("Authentication failed."));
 
-        const result = await this.userStore.update(userUpdateDto.id, this.mapper.map(userUpdateDto, new UserDto()));
+        userUpdateDto['id'] = id;
+        const result = await this.userStore.update(id, this.mapper.map(userUpdateDto, new UserDto()));
 
         return this.mapper.map(result, new UserAuthDto());
     }
 
-    async deleteAccount(id: number, userCredentialsDto: UserCredentialsDto): Promise<void> {
+    public async deleteAccount(id: number, userCredentialsDto: UserCredentialsDto): Promise<boolean> {
         const user = await this.userStore.findOneById(id);
 
         ValidatorRule
             .when(!user)
+            .triggerException(new UnauthorizedException("Authentication failed."));
+
+        ValidatorRule
             .when(user.username != userCredentialsDto.username)
             .triggerException(new HttpException(
-                'There is no user associated with the given ID and username.',
+                'There is no user associated with the given username.',
                 HttpStatus.BAD_REQUEST
             ));
 
         ValidatorRule
             .when(!(await bcrypt.compare(userCredentialsDto.password, user.password)))
-            .triggerException(new UnauthorizedException("Authentication failed."));
+            .triggerException(new UnauthorizedException("Authentication failed.\r\nCheck your credentials."));
         
         return await this.userStore.remove(user.id);
     }
 
-    async isAPITokenValid(apiToken: string): Promise<{ validToken: boolean, userId: number }> {
+    public async isAPITokenValid(apiToken: string): Promise<{ validToken: boolean, userId: number }> {
         ValidatorRule
             .when(!apiToken)
             .triggerException(new UnauthorizedException("An API token is required for this operation."));
@@ -78,7 +82,7 @@ export default class AuthService implements IAuthService {
         return { validToken: true, userId: user.id };
     }
     
-    async findUserByApiToken(apiToken: string): Promise<UserDto> {
+    public async findUserByApiToken(apiToken: string): Promise<UserDto> {
         const user = await this.userStore.findOneByApiToken(apiToken);
 
         ValidatorRule
@@ -88,7 +92,7 @@ export default class AuthService implements IAuthService {
         return user;
     }
     
-    async isRoleValid(apiToken: string) {
+    public async isRoleValid(apiToken: string) {
         const user = await this.userStore.findOneByApiToken(apiToken);
 
         ValidatorRule

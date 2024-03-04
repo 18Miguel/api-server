@@ -1,0 +1,21 @@
+<script src="./enventSourcePolufill.js"></script>
+<script type="text/javascript">
+  const eventSource = new EventSourcePolyfill('http://localhost:5000/media/catalog/tv/updated', {
+    headers: {
+        'Authorization': 'Bearer ' + 'e0cf9209477efb8baa2263a9c99ad6b3bd514179c5d87ca6ff4b167337593796' 
+    }
+  })
+  eventSource.onmessage = (data) => {
+    console.log(data);
+    const message = document.createElement('pre');
+    message.innerText = JSON.stringify(JSON.parse(data.data), null, 2);
+    document.body.appendChild(message);
+  }
+  eventSource.onerror = (error) => {
+    console.log(error);
+    const message = document.createElement('li');
+    message.innerText = `Event type: ${event.type}, readyState: ${event.target.readyState}, URL: ${event.target.url}`;
+    document.body.appendChild(message);
+    eventSource.close();
+  }
+</script>

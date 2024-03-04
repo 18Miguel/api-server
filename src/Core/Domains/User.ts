@@ -1,7 +1,7 @@
 import { Column, Entity, JoinColumn, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import UserRoles from '../Types/Enums/UserRoles';
 import { MapProp } from 'ts-simple-automapper';
-import MediaCatalogUser from './MediaCatalogUser';
+import UserMediaCatalog from './UserMediaCatalog';
 
 @Entity()
 export default class User {
@@ -29,7 +29,7 @@ export default class User {
     @MapProp()
     public apiTokenCreateAt: Date;
 
-    @OneToMany(() => MediaCatalogUser, mediaCatalogUser => mediaCatalogUser.user)
+    @OneToMany(() => UserMediaCatalog, userMediaCatalog => userMediaCatalog.user, { cascade: true })
     @JoinColumn()
-    public mediaCatalogList: Array<MediaCatalogUser>;
+    public mediaCatalog: Array<UserMediaCatalog>;
 }

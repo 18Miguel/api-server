@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
+import { GraphQLModule } from '@nestjs/graphql';
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource, DataSourceOptions } from 'typeorm';
@@ -13,9 +15,11 @@ import AuthService from './Services/Services/AuthService';
 import ApiTokenGuard from './Guards/ApiTokenGuard';
 import RoleGuard from './Guards/RoleGuard';
 import RootService from './Services/Services/RootService';
-import MediaCatalogService from './Services/Services/MediaCatalogService';
-import MediaCatalogStore from './Services/Stores/MediaCatalogStore';
+import MediaService from './Services/Services/MediaService';
+import MediaStore from './Services/Stores/MediaStore';
 import UserStore from './Services/Stores/UserStore';
+import UserMediaCatalogStore from './Services/Stores/UserMediaCatalogStore';
+import UserSubscriber from './Subscribers/UserSubscriber';
 
 @Module({
     imports: [
@@ -42,40 +46,44 @@ import UserStore from './Services/Stores/UserStore';
         }),
         ScheduleModule.forRoot(),
         CoreModule,
+        /* GraphQLModule.forRoot<ApolloDriverConfig>({
+            driver: ApolloDriver,
+            autoSchemaFile: true,
+        }), */
     ],
     providers: [
-        Mapper,
-        {
+        UserSubscriber,
+        UserMediaCatalogStore,
+        Mapper, {
             provide: 'Mapper',
             useExisting: Mapper
         },
-        ApiTokenGuard,
-        {
+        ApiTokenGuard, {
             provide: APP_GUARD,
             useClass: RoleGuard,
         },
-        RootService,
-        {
+        RootService, {
             provide: 'IRootService',
             useExisting: RootService
         },
-        AuthService,
-        {
+        AuthService, {
             provide: 'IAuthService',
             useExisting: AuthService
         },
-        MediaCatalogService,
-        {
-            provide: 'IMediaCatalogService',
-            useExisting: MediaCatalogService
+        MediaService, {
+            provide: 'IMediaService',
+            useExisting: MediaService
         },
-        MediaCatalogStore,
-        {
-            provide: 'IMediaCatalogStore',
-            useExisting: MediaCatalogStore
+        MediaStore, {
+            provide: 'IMediaStore',
+            useExisting: MediaStore
         },
-        UserStore,
-        {
+        //MediaResolver,
+        UserMediaCatalogStore, {
+            provide: 'IUserMediaCatalogStore',
+            useExisting: UserMediaCatalogStore
+        },
+        UserStore, {
             provide: 'IUserStore',
             useExisting: UserStore
         },
@@ -85,7 +93,7 @@ import UserStore from './Services/Stores/UserStore';
         ApiTokenGuard,
         'IRootService',
         'IAuthService',
-        'IMediaCatalogService',
+        'IMediaService',
         'IUserStore'
     ]
 })

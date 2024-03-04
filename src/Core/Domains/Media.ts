@@ -1,15 +1,20 @@
 import { Column, Entity, JoinColumn, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
-import MediaCatalogDto from '../DTO/MediaCatalogDto';
 import ValidatorRule from '../Shared/ValidatorRule';
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { MapProp } from 'ts-simple-automapper';
-import MediaCatalogUser from './MediaCatalogUser';
+import UserMediaCatalog from './UserMediaCatalog';
+import MediaDto from '../DTO/MediaDto';
+import MediaTypes from '../Types/Enums/MediaTypes';
 
 @Entity()
-export default class MediaCatalog {
+export default class Media {
     @PrimaryGeneratedColumn()
     @MapProp()
     public id: number;
+    
+    @Column()
+    @MapProp()
+    public tmdbId: number;
 
     @Column()
     @MapProp()
@@ -29,63 +34,60 @@ export default class MediaCatalog {
 
     @Column({ nullable: true, default: null })
     @MapProp()
+    public posterPath?: string;
+
+    @Column({ nullable: true, default: null })
+    @MapProp()
     public numberOfEpisodes?: number = null;
     
     @Column({ nullable: true, default: null })
     @MapProp()
     public inProduction?: boolean = null;
 
-    @OneToMany(() => MediaCatalogUser, mediaCatalogUser => mediaCatalogUser.mediaCatalog)
+    @OneToMany(() => UserMediaCatalog, userMediaCatalog => userMediaCatalog.media, { cascade: true })
     @JoinColumn()
-    public usersList: Array<MediaCatalogUser>;
+    public users: Array<UserMediaCatalog>;
 
-    updateMediaCatalog(mediaCatalogDto: MediaCatalogDto): void {
+    updateMediaCatalog(mediaDto: MediaDto): void {
         ValidatorRule
-            .when(typeof mediaCatalogDto.type !== 'string')
+            .when(typeof mediaDto.type !== 'string')
             .triggerException(new HttpException(
                 'The type is required.',
                 HttpStatus.BAD_REQUEST
             ));
         
         ValidatorRule
-            .when(typeof mediaCatalogDto.title !== 'string')
+            .when(typeof mediaDto.title !== 'string')
             .triggerException(new HttpException(
                 'The title is required.',
                 HttpStatus.BAD_REQUEST
             ));
         
         ValidatorRule
-            .when(!mediaCatalogDto.releaseDate)
-            .when(typeof mediaCatalogDto.releaseDate == 'number')
-            .when(!new Date(mediaCatalogDto.releaseDate).getTime())
+            .when(!mediaDto.releaseDate)
+            .when(typeof mediaDto.releaseDate == 'number')
+            .when(!new Date(mediaDto.releaseDate).getTime())
             .triggerException(new HttpException(
                 'The release date must be valid.',
                 HttpStatus.BAD_REQUEST
             ));
 
         ValidatorRule
-            .when(mediaCatalogDto.numberOfEpisodes &&
-                mediaCatalogDto.numberOfEpisodes < 0)
+            .when(mediaDto.numberOfEpisodes &&
+                mediaDto.numberOfEpisodes < 0)
             .triggerException(new HttpException(
                 'The number of episodes must be greater than or equal to zero.',
                 HttpStatus.BAD_REQUEST
             ));
 
-        ValidatorRule
-            .when(mediaCatalogDto.watched === undefined)
-            .when(mediaCatalogDto.watched === null)
-            .when(typeof mediaCatalogDto.watched !== 'boolean')
-            .triggerException(new HttpException(
-                'Watched must be defined as a boolean.',
-                HttpStatus.BAD_REQUEST
-            ));
-
-        this.id = mediaCatalogDto.id;
-        this.type = mediaCatalogDto.type;
-        this.title = mediaCatalogDto.title;
-        this.releaseDate = mediaCatalogDto.releaseDate;
-        this.genres = mediaCatalogDto.genres || '';
-        this.numberOfEpisodes = mediaCatalogDto.numberOfEpisodes ?? null;
-        this.inProduction = mediaCatalogDto.inProduction ?? null;
+        this.id = mediaDto.id;
+        this.tmdbId = mediaDto.tmdbId;
+        this.type = mediaDto.type;
+        this.title = mediaDto.title;
+        this.releaseDate = mediaDto.releaseDate;
+        this.genres = mediaDto.genres ?? '';
+        this.posterPath = mediaDto.posterPath ?? null;
+        this.numberOfEpisodes = mediaDto.numberOfEpisodes ?? null;
+        this.inProduction = mediaDto.inProduction ?? null;
     }
 }

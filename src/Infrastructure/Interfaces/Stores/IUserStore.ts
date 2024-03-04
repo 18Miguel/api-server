@@ -7,5 +7,5 @@ export default interface IUserStore {
    findOneByApiToken(apiToken: string): Promise<UserDto>;
    create(userDto: UserDto): Promise<UserDto>;
    update(id: number, userDto: UserDto): Promise<UserDto>;
-   remove(id: number): Promise<void>;
+   remove(id: number): Promise<boolean>;
 }
