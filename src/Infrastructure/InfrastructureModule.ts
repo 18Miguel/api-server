@@ -20,6 +20,7 @@ import MediaStore from './Services/Stores/MediaStore';
 import UserStore from './Services/Stores/UserStore';
 import UserMediaCatalogStore from './Services/Stores/UserMediaCatalogStore';
 import UserSubscriber from './Subscribers/UserSubscriber';
+import QueryResolver from './GraphQL/QueryResolver';
 
 @Module({
     imports: [
@@ -46,10 +47,10 @@ import UserSubscriber from './Subscribers/UserSubscriber';
         }),
         ScheduleModule.forRoot(),
         CoreModule,
-        /* GraphQLModule.forRoot<ApolloDriverConfig>({
+        GraphQLModule.forRoot<ApolloDriverConfig>({
             driver: ApolloDriver,
             autoSchemaFile: true,
-        }), */
+        }),
     ],
     providers: [
         UserSubscriber,
@@ -79,6 +80,7 @@ import UserSubscriber from './Subscribers/UserSubscriber';
             useExisting: MediaStore
         },
         //MediaResolver,
+        QueryResolver,
         UserMediaCatalogStore, {
             provide: 'IUserMediaCatalogStore',
             useExisting: UserMediaCatalogStore
