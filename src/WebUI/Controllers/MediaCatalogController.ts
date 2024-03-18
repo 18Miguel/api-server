@@ -54,14 +54,6 @@ export default class MediaCatalogController {
             ));
         const userId = Number(request.headers['User-Id'] ?? request.headers['user-id']);
         return await this.mediaService.markMedia(setMediaDto.tmdbId, setMediaDto.watched, userId, setMediaDto.mediaType);
-        /* switch (setMediaDto.mediaType) {
-            case MediaTypes.Movie:
-                return await this.mediaService.markMovieMedia(setMediaDto.id, setMediaDto.watched, userId);
-            case MediaTypes.TvShow:
-                return await this.mediaService.markTvMedia(setMediaDto.id, setMediaDto.watched, userId);
-            default:
-                throw new HttpException(`Unsupported media type: ${setMediaDto.mediaType}`, HttpStatus.BAD_REQUEST);
-        } */
     }
 
     @Delete('catalog/:id')

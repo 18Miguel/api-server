@@ -12,7 +12,7 @@ const searchDataSchema = z.array(z.object({
     first_air_date: z.string().optional(),
     poster_path: z.string().nullable().optional(),
     backdrop_path: z.string().nullable().optional(),
-    vote_average: z.number(),
+    vote_average: z.number().optional(),
 }));
 
 export default searchDataSchema;

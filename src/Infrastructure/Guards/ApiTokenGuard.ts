@@ -2,6 +2,7 @@ import { CanActivate, ExecutionContext, Inject, Injectable, UnauthorizedExceptio
 import { CACHE_MANAGER, Cache } from "@nestjs/cache-manager";
 import IAuthService from "src/Infrastructure/Interfaces/Services/IAuthService";
 import ValidatorRule from "src/Core/Shared/ValidatorRule";
+import { GqlExecutionContext } from "@nestjs/graphql";
 
 @Injectable()
 export default class ApiTokenGuard implements CanActivate {
@@ -11,7 +12,7 @@ export default class ApiTokenGuard implements CanActivate {
     ) {}
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
-        const request = context.switchToHttp().getRequest<Request>();
+        const request = context.switchToHttp().getRequest<Request>() ?? GqlExecutionContext.create(context).getContext().req as Request;
         const token = (request.headers['Authorization'] ?? request.headers['authorization']) as string;
 
         ValidatorRule

@@ -4,6 +4,7 @@ export function remapFilter<T, S extends Record<string, any>>(
     where: Filter<S>,
     remapProperty: (key: keyof S, value: any) => Record<string, any> | undefined
 ): Filter<T> {
+    if (!where) return {};
     const remappedFilter: Filter<T> = {};
     for (const key in where) {
         if (key === 'and' || key === 'or') {

@@ -7,7 +7,7 @@ import { EntityComparisonField, SQLComparisonBuilder } from ".";
  * Builds a WHERE clause from a Filter.
  */
 export class WhereBuilder<Entity> {
-    constructor(readonly sqlComparisonBuilder: SQLComparisonBuilder<Entity> = new SQLComparisonBuilder<Entity>()) {}
+    constructor(private readonly sqlComparisonBuilder: SQLComparisonBuilder<Entity> = new SQLComparisonBuilder<Entity>()) {}
   
     /**
      * Builds a WHERE clause from a Filter.
@@ -17,10 +17,10 @@ export class WhereBuilder<Entity> {
      * @param alias - optional alias to use to qualify an identifier
      */
     public build<Where extends WhereExpressionBuilder>(
-      where: Where,
-      filter: Filter<Entity>,
-      relationNames: NestedRecord,
-      alias?: string,
+        where: Where,
+        filter: Filter<Entity>,
+        relationNames: NestedRecord,
+        alias?: string,
     ): Where {
         where = this.filterFields(where, filter, relationNames, alias);
         

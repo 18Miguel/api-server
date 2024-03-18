@@ -1,4 +1,4 @@
-import { Filter, SortField } from "."
+import { Filter, Sort } from "."
 
 export interface Query<DTO> {
     first?: number
@@ -6,5 +6,5 @@ export interface Query<DTO> {
     last?: number
     before?: string
     where?: Filter<DTO>
-    order?: SortField<DTO>
+    order?: Sort<DTO>
 }

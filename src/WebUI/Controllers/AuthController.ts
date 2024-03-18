@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Put, Delete, Param, Inject, Req, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, Put, Delete, Inject, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import IAuthService from 'src/Infrastructure/Interfaces/Services/IAuthService';
 import UserAuthDto from 'src/Core/DTO/UserAuthDto';

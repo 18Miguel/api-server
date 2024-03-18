@@ -200,6 +200,8 @@ type FilterFieldComparisonType<FieldType, IsKeys extends true | false> = FieldTy
     ? CommonFieldComparisonType<U> | Filter<U>
     : IsKeys extends true
     ? CommonFieldComparisonType<FieldType> & StringFieldComparisons & Filter<FieldType>
+    : FieldType extends Function
+    ? undefined
     : CommonFieldComparisonType<FieldType> | Filter<FieldType>;
 
 /**

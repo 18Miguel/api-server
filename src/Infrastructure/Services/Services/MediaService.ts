@@ -195,6 +195,7 @@ export default class MediaService implements IMediaService  {
         const mediaDto = new MediaDto();
         mediaDto.tmdbId = result.id;
         mediaDto.title = result['original_title'] || result['original_name'];
+        mediaDto.overview = result.overview;
         mediaDto.releaseDate = new Date(result['release_date'] || result['first_air_date']);
         mediaDto.genres = result.genres.map(({ name }) => name)
             .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase())).join(', ');

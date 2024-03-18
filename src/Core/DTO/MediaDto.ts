@@ -30,6 +30,9 @@ export default class MediaDto {
     @ApiProperty({ required: true })
     @MapProp()
     public title: string;
+    
+    @ApiProperty({ required: false, nullable: true })
+    public overview: string;
 
     @FilterableField()
     @IsDateString()

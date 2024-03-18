@@ -1,6 +1,6 @@
 import { EntityMetadata, QueryBuilder, Repository, SelectQueryBuilder, WhereExpressionBuilder } from "typeorm"
-import { Filter, Query, SortField } from "../Interfaces"
-import { WhereBuilder } from "../Helpers"
+import { ConnectionType, Filter, IEdgeType, Query, Sort } from "../Interfaces"
+import { PageInfo, WhereBuilder } from "../Helpers"
 import { merge } from "lodash"
 
 /**
@@ -56,12 +56,76 @@ export class QueryBuilderService<Entity> {
         return referencedFields.filter((field) => relationNames.includes(field));
     }
 
+    private getPageInfo(totalCount: number, query: Query<Entity>): PageInfo {
+        let { first, after, last, before } = query;
+        after = after ? Buffer.from(after, 'base64').toString('ascii') : undefined;
+        before = before ? Buffer.from(before, 'base64').toString('ascii') : undefined;
+        const pageInfo = new PageInfo();
+        if (
+            (first && (first <= 0)) ||
+            (!after && (Number(after) <= 0 || Number(after) > totalCount)) ||
+            ((last && last <= 0) || (last && !before)) ||
+            (!before && (Number(before) <= 0 || Number(before) > totalCount))
+        ) return pageInfo;
+
+        let startingIndex: number | null = 1, endIndex: number | null = totalCount;
+        if (first) {
+            startingIndex = (Math.max(Number(after ?? 0), 0) + 1);
+            endIndex = Math.min(first, totalCount);
+            if (after) {
+                if (startingIndex > totalCount)
+                return pageInfo;
+                endIndex = Math.min(Number(after) + first, totalCount);
+            }
+        
+        } else if (last && before) {
+            endIndex = Number(before) - 1;
+            if (endIndex < 1)
+                return pageInfo;
+            startingIndex = Math.max(Number(before) - last, 1);
+        }
+
+        pageInfo.startCursor = Buffer.from(`${startingIndex}`).toString('base64');
+        pageInfo.hasNextPage = Boolean(endIndex && endIndex < totalCount);
+        pageInfo.endCursor = Buffer.from(`${endIndex}`).toString('base64');
+        pageInfo.hasPreviousPage = Boolean(startingIndex && startingIndex > 1);
+        return pageInfo;
+    }
+
     /**
      * Create a `typeorm` SelectQueryBuilder which can be used as an entry point to create update, delete or insert
      * QueryBuilders.
      */
     public createQueryBuilder(): SelectQueryBuilder<Entity> {
         return this.entityRepository.createQueryBuilder();
+    }
+    
+    /**
+     * Query for multiple entities.
+     *
+     * @param query - The Query used to filter, page, and sort rows.
+     * @see Query<Entity> for implementation details
+     */
+    public async query(query: Query<Entity>): Promise<Array<Entity>> {
+        return (await this.select(query)).getMany();
+    }
+
+    public async createConnectionType(query: Query<Entity>): Promise<ConnectionType<Entity>> {
+        const totalCount = await this.getCount(query.where);
+        const pageInfo = this.getPageInfo(totalCount, query);
+        const result = await this.query(query);
+        const startCursor = pageInfo.startCursor
+            ? Number(Buffer.from(pageInfo.startCursor, 'base64').toString('ascii')) : 1;
+        const edges = result.map((element, index): IEdgeType<Entity> => ({
+            cursor: Buffer.from(`${startCursor + index}`).toString('base64'),
+            node: element,
+        }));
+
+        return {
+            totalCount,
+            pageInfo,
+            edges,
+        };
     }
 
     /**
@@ -80,20 +144,6 @@ export class QueryBuilderService<Entity> {
         queryBuilder = await this.applyPaging(queryBuilder, query);
 
         return queryBuilder;
-    }
-
-    /**
-     * Query for multiple entities.
-     *
-     * @example
-     * ```ts
-     * const result = await this.queryBuilderService.query({ }: Query<Entity>);
-     * ```
-     * @param query - The Query used to filter, page, and sort rows.
-     * @see Query<Entity> for implementation details
-     */
-    public async query(query: Query<Entity>): Promise<Array<Entity>> {
-        return (await this.select(query)).getMany();
     }
 
     /**
@@ -139,19 +189,19 @@ export class QueryBuilderService<Entity> {
         const referencedRelations = Object.keys(relationsMap);
         return referencedRelations.reduce((rqb, relation) => {
             return this.applyRelationJoinsRecursive(
-                rqb.leftJoin(`${alias ?? rqb.alias}.${relation}`, relation),
+                rqb.leftJoinAndSelect(`${alias ?? rqb.alias}.${relation}`, relation),
                 relationsMap[relation],
                 relation,
             );
         }, queryBuilder);
     }
 
-    public getReferencedRelationsRecursive(metadata: EntityMetadata, filter: Filter<unknown> = {}): NestedRecord {
-        const referencedFields = Array.from(new Set(Object.keys(filter) as (keyof Filter<unknown>)[]));
+    public getReferencedRelationsRecursive(metadata: EntityMetadata, filterOrSort: Filter<unknown> | Sort<unknown> = {}): NestedRecord {
+        const referencedFields = Array.from(new Set(Object.keys(filterOrSort) as Array<keyof Filter<unknown> | keyof Sort<unknown>>));
         return referencedFields.reduce((prev, curr) => {
-            const currFilterValue = filter[curr];
-            if ((curr === 'and' || curr === 'or') && currFilterValue) {
-                for (const subFilter of currFilterValue) {
+            const currentValue = filterOrSort[curr];
+            if ((curr === 'and' || curr === 'or') && currentValue) {
+                for (const subFilter of currentValue) {
                     prev = merge(prev, this.getReferencedRelationsRecursive(metadata, subFilter));
                 }
             }
@@ -160,7 +210,7 @@ export class QueryBuilderService<Entity> {
             return {
                 ...prev,
                 [curr]: merge((prev as NestedRecord)[curr],
-                    this.getReferencedRelationsRecursive(referencedRelation.inverseEntityMetadata, currFilterValue)),
+                    this.getReferencedRelationsRecursive(referencedRelation.inverseEntityMetadata, currentValue)),
             };
         }, {});
     }
@@ -183,13 +233,15 @@ export class QueryBuilderService<Entity> {
      * @param sorts - an array of SortFields to create the ORDER BY clause.
      * @param alias - optional alias to use to qualify an identifier
      */
-    public applySorting<T extends Sortable<Entity>>(queryBuilder: T, sorts?: SortField<Entity>, alias?: string): T {
+    public applySorting<T extends Sortable<Entity>>(queryBuilder: T, sorts?: Sort<Entity>, alias?: string): T {
         if (!sorts) return queryBuilder;
-        return Object.keys(sorts).reduce((prevQueryBuilder, field) => {
-            const { direction, nulls } = sorts[field as keyof Entity]!;
-            const col = alias ? `${alias}.${field}` : `${field}`;
-            prevQueryBuilder = prevQueryBuilder.addOrderBy(col, direction, nulls);
-            return prevQueryBuilder;
+        const relationNames = this.getReferencedRelationsRecursive(this.entityRepository.metadata, sorts);
+
+        return Object.keys(sorts).reduce((prevQueryBuilder, sort) => {
+            const data = sorts[sort];
+            if (relationNames[sort as string]) return this.applySorting(prevQueryBuilder, data, sort);
+            const col = alias ? `${alias}.${sort}` : `${sort}`;
+            return prevQueryBuilder.addOrderBy(col, data.direction, data.nulls);
         }, queryBuilder);
     }
 
@@ -218,7 +270,7 @@ export class QueryBuilderService<Entity> {
             const skip = beforeCursor === 1
                 ? totalCount // Hack to get an empty list
                 : Math.max(0, beforeCursor - query.last - 1);
-            console.log('SKIP AND TAKE:', skip, take, 'SKIP AND TAKE:', Math.max(0, beforeCursor - take - 1), Math.min(query.last, beforeCursor - 1));
+            console.log('SKIP AND TAKE:', skip, take);
             queryBuilder = queryBuilder.skip(skip);
             queryBuilder = queryBuilder.take(take);
         }

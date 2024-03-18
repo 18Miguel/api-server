@@ -1,7 +1,7 @@
 import { Type } from "@nestjs/common";
 import { ArgsType, Field, Int } from "@nestjs/graphql";
 import { ValidateIf, Min, Max } from "class-validator";
-import { Query, SortField } from "../Interfaces";
+import { Query, Sort } from "../Interfaces";
 import { Filter } from "../../Utils/Interfaces";
 import { FilterType, ConnectionTypeMapper, SortType } from ".";
 import { SkipIf } from "../Decorators/SkipIf";
@@ -55,7 +55,7 @@ export function QueryArgsType<DTO>(DTOClass: Type<DTO>, options?: { disableFilte
             nullable: true,
             description: 'Specify to sort results.',
         }))
-        public order?: SortField<DTO>;
+        public order?: Sort<DTO>;
     }
 
     return QueryArgs;
